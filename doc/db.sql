@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS settings (
+    `id` INT(4) PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    `key`   TEXT,
+    `value` TEXT
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS documents (
+    id INT(4) PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    title   TEXT NOT NULL,
+    body    TEXT NOT NULL
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS tokens (
+    id INT(4) PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    token      TEXT NOT NULL,
+    docs_count INT NOT NULL,
+    postings   BLOB NOT NULL
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE UNIQUE INDEX token_index ON tokens(token);
+CREATE UNIQUE INDEX title_index ON documents(title);
