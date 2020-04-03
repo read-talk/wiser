@@ -144,6 +144,7 @@ func GetPostings(id int) (int, string, error) {
 }
 
 func UpdatePostings(id, count int, postings string) bool {
+	fmt.Printf("更新倒排列表 id: %d, count: %d, postings:%s", id, count, postings)
 	stmt, err := db.Prepare("UPDATE tokens SET docs_count = ?, postings = ? WHERE id = ?;")
 	if err != nil {
 		fmt.Println("failed to update postings, prepare sql err: ", err.Error())

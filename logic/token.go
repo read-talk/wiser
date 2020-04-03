@@ -60,6 +60,7 @@ func (env *WiserEnv) TokenToPostingsList(id int, token string, start int) error 
 			PostingsCount: 0,         // 该词元在所有文档中的出现次数之和
 		}
 		env.IIBuffer.HashMap[tokenID] = IIEntry
+		env.IIBuffer.Items = append(env.IIBuffer.Items, IIEntry)
 
 		pl = &PostingsList{
 			DocumentID:     id,

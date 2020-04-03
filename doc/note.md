@@ -369,6 +369,26 @@ wiser 只支持 AND 检索，所以在下文都假设进行的是 AND 检索
 以检索模式启动 wiser 后，函数 `search()`  就会被调用
 
 ```go
+// 进行全文检索 query 查询
+func (env *WiserEnv) Search(q string) {
+	// 判断查询字符串的长度是否大于 N-gram 中的 N 的取值
+	var result = &SearchResult{}
+	if len(q) < env.TokenLen {
+		fmt.Println("too short query.")
+		return
+	} else { // 如果长度大于N，就将词元从查询字符串中提取出来
+		queryTokens := splitQueryToTokens(q)
+		// 以刚刚提取出来的词元作为参数，开始进行检索处理
+		result = searchDocs(queryTokens)
+	}
+	// 打印检索结果
+	printSearchResults(result)
+}
+```
+
+####`splitQueryToTokens`  函数的具体实现
+
+```go
 
 ```
 
