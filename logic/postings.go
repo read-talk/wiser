@@ -42,7 +42,6 @@ func FetchPostings(tokenID int) (*PostingsList, int, error) {
 	if buf == "" {
 		return nil, 0, nil
 	}
-
 	postings, err := DecodePostings(buf)
 	if err != nil {
 		return nil, 0, err
@@ -117,19 +116,19 @@ func MergeInvertedIndex(base, toBeAdded *InvertedIndexHash) {
 // postings 待打印的倒排列表
 func dumpPostingsList(postings *PostingsList) {
 	for e := postings; e != nil; e = e.Next {
-		fmt.Printf("doc_id %d (", e.DocumentID)
+		fmt.Printf(" doc_id: %d (", e.DocumentID)
 		if e.Positions != nil {
 			for _, p := range e.Positions {
-				fmt.Printf("%d ", p)
+				fmt.Printf(" (位置: %d ) ", p)
 			}
 		}
-		fmt.Printf(")\n")
+		fmt.Printf(") ")
 	}
 }
 
 // 输出倒排索引的内容
-func (env *WiserEnv) DumpInvertedIndex() {
-	for _, it := range env.IIBuffer.HashMap {
+func DumpInvertedIndex(c *InvertedIndexHash) {
+	for _, it := range c.HashMap {
 		if it.TokenID != 0 {
 			token, _ := dao.GetToken(it.TokenID)
 			fmt.Printf("TOKEN %d.%s(%d):\n", it.TokenID, token, it.DocsCount)
@@ -137,7 +136,7 @@ func (env *WiserEnv) DumpInvertedIndex() {
 			fmt.Println("TOKEN NONE:")
 		}
 		if it.PostingsList != nil {
-			fmt.Printf("POSTINGS: [\n")
+			fmt.Printf("POSTINGS: [")
 			dumpPostingsList(it.PostingsList)
 			fmt.Printf("]\n")
 		}

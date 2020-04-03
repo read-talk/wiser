@@ -63,21 +63,21 @@ func (env *WiserEnv) AddDocument(title, body string) error {
 		}
 		env.IIBuffer = nil
 		env.IIBufferCount = 0
-		fmt.Println("Index flushed")
 		util.PrintTimeDiff()
-		fmt.Println("合并倒排索引结束")
+		fmt.Println("Index flushed合并倒排索引结束")
 	}
 	return nil
 }
 
 // 导入 wiki 数据
-func (env *WiserEnv) LoadWikiDump(wikiDumpFile string) error {
+func (env *WiserEnv) LoadWikiDump(wikiDumpFile string,m int) error {
 	xmlFile, err := os.Open(wikiDumpFile)
 	if err != nil {
 		return err
 	}
 	defer xmlFile.Close()
 
+	var cnt int
 	decoder := xml.NewDecoder(xmlFile)
 	for {
 		t, err := decoder.Token()
@@ -99,6 +99,10 @@ func (env *WiserEnv) LoadWikiDump(wikiDumpFile string) error {
 				if err != nil {
 					fmt.Println("add document failed: ", err)
 					return err
+				}
+				cnt++
+				if cnt > m {
+					break
 				}
 			}
 		}
