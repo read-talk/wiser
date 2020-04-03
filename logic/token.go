@@ -13,6 +13,7 @@ func (env *WiserEnv) TextToPostingsLists(documentId int, text string) error {
 	// 分隔 N-gram 词元
 	runeBody := []rune(text)
 	start := 0
+	var bufferPostings = &InvertedIndexHash{}
 	for {
 		// 每次从字符串中取出长度为 N-gram 的词元
 		tokenLen, position := util.NgramNext(runeBody, &start, env.TokenLen)
@@ -30,6 +31,12 @@ func (env *WiserEnv) TextToPostingsLists(documentId int, text string) error {
 		}
 	}
 	// 当循环结束后，传入的 text 构成的倒排索引就构建好了。
+
+	if env.IIBuffer != nil {
+		MergeInvertedIndex(env.IIBuffer, bufferPostings)
+	} else {
+		env.IIBuffer = bufferPostings
+	}
 	return nil
 }
 
@@ -39,36 +46,47 @@ func (env *WiserEnv) TextToPostingsLists(documentId int, text string) error {
 // start 词元出现的位置
 func (env *WiserEnv) TokenToPostingsList(id int, token string, start int) error {
 	// 获取词元对应的编号
-	tokenID, _ := DBGetTokenID(token, id)
-
-	IIEntry, ok := env.IIBuffer[tokenID]
-	if !ok {
-		IIEntry = InvertedIndex{
-			PostingsMap:   map[int][]int{},
-			PostingsCount: 1,
+	tokenID, docsCount := DBGetTokenID(token, id)
+	var pl = &PostingsList{}
+	IIEntry, ok := env.IIBuffer.HashMap[tokenID]
+	if ok {
+		pl = IIEntry.PostingsList
+		pl.PositionsCount++
+	} else {
+		IIEntry = &InvertedIndexValue{
+			TokenID:       tokenID,   // 词元编号（Token ID）
+			PostingsList:  nil,       // 指向包含该词元的倒排列表的指针
+			DocsCount:     docsCount, // 出现过该词元的文档数
+			PostingsCount: 0,         // 该词元在所有文档中的出现次数之和
 		}
-		env.IIBuffer[tokenID] = IIEntry
-	}
-	_, ok = IIEntry.PostingsMap[id]
-	if !ok {
-		IIEntry.PostingsMap[id] = []int{}
+		env.IIBuffer.HashMap[tokenID] = IIEntry
+
+		pl = &PostingsList{
+			DocumentID:     id,
+			Positions:      nil,
+			PositionsCount: 1,
+			Next:           nil,
+		}
+		IIEntry.PostingsList = pl
 	}
 	// 存储位置信息
-	IIEntry.PostingsMap[id] = append(IIEntry.PostingsMap[id], start)
+	pl.Positions = append(pl.Positions, start)
 	IIEntry.PostingsCount++
 	return nil
 }
 
 // 如果之前已将编号分配给了该词元，那么获取的正是这个编号
 // 如果之前没有分配编号，则为该词元分配一个新的编号
+// id 传入的是文档id，如果不为空，就存储该词元
+// 返回该词元的id和出现过指定词元的文档数
 func DBGetTokenID(token string, id int) (int, int) {
 	if id != 0 {
 		dao.StoreToken(token, "")
 	}
-	id, count, err := dao.GetTokenId(token)
+	tokenID, count, err := dao.GetTokenId(token)
 	if err != nil {
 		fmt.Println("为传入的词元创建倒排列表时出错, err: ", err)
 		return 0, 0
 	}
-	return id, count
+	return tokenID, count
 }

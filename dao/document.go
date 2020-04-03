@@ -1,6 +1,8 @@
 package dao
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func GetDocumentId(title string) (int, error) {
 	stmt, err := db.Prepare("SELECT id FROM documents WHERE title = ?;")
@@ -64,7 +66,7 @@ func UpdateDocument(id int, body string) bool {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(id, body)
+	_, err = stmt.Exec(body, id)
 	if err != nil {
 		fmt.Println("failed to update document, err: ", err.Error())
 		return false
@@ -108,7 +110,7 @@ func GetToken(id int) (string, error) {
 }
 
 func StoreToken(token, postings string) bool {
-	stmt, err := db.Prepare("INSERT IGNORE INTO tokens (token, docs_count, postings) VALUES (?, 0, ?);")
+	stmt, err := db.Prepare("INSERT IGNORE INTO tokens (token, docs_count, postings) VALUES (?, 1, ?);")
 	if err != nil {
 		fmt.Println("failed to store token, prepare sql err: ", err.Error())
 		return false
@@ -149,7 +151,7 @@ func UpdatePostings(id, count int, postings string) bool {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(id, count, postings)
+	_, err = stmt.Exec(count, postings, id)
 	if err != nil {
 		fmt.Println("failed to update postings, err: ", err.Error())
 		return false
